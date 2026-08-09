@@ -412,15 +412,18 @@ namespace Persistence.Data.Migrations
 
             modelBuilder.Entity("Domain.Entities.LegalDocument", b =>
                 {
-                    b.HasOne("Domain.Entities.LegalOpinion", null)
+                    b.HasOne("Domain.Entities.LegalOpinion", "LegalOpinion")
                         .WithMany("LegalDocuments")
-                        .HasForeignKey("LegalOpinionId");
+                        .HasForeignKey("LegalOpinionId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Domain.Entities.ApplicationUser", "UploadedBy")
                         .WithMany("UploadedDocuments")
                         .HasForeignKey("UploadedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("LegalOpinion");
 
                     b.Navigation("UploadedBy");
                 });

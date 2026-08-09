@@ -30,5 +30,8 @@ namespace Domain.Entities {
         public int UploadedById { get; set; }
 
         public ApplicationUser UploadedBy { get; set; } = null!;
+
+        public int? LegalOpinionId { get; set; }
+        public LegalOpinion? LegalOpinion { get; set; }
     }
 }

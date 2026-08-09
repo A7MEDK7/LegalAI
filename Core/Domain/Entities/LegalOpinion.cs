@@ -28,7 +28,7 @@ namespace Domain.Entities {
         public ApplicationUser? ReviewedBy { get; set; } // Legal Manger
 
 
-        public ICollection<OpinionReview> Reviews { get; set; }
+        public ICollection<OpinionReview>? Reviews { get; set; }
         public ICollection<LegalDocument>?  LegalDocuments { get; set; }
     }
 }

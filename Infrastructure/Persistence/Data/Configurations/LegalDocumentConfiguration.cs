@@ -52,6 +52,12 @@ namespace Persistence.Data.Configurations {
                 .WithMany(x => x.UploadedDocuments)
                 .HasForeignKey(x => x.UploadedById)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.LegalOpinion)
+                .WithMany(x => x.LegalDocuments)
+                .HasForeignKey(x => x.LegalOpinionId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
