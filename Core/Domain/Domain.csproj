@@ -7,11 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.29" />
+    <Compile Remove="Contract\Exceptions\**" />
+    <EmbeddedResource Remove="Contract\Exceptions\**" />
+    <None Remove="Contract\Exceptions\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Contract\Exceptions\" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.29" />
   </ItemGroup>
 
 </Project>

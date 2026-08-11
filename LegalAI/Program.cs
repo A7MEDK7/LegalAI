@@ -4,6 +4,7 @@ using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Data;
+using Persistence.Repositories;
 
 namespace LegalAI {
     public class Program {

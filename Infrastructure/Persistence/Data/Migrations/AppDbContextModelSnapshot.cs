@@ -187,7 +187,9 @@ namespace Persistence.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LegalOpinionId");
+                    b.HasIndex("LegalOpinionId")
+                        .IsUnique()
+                        .HasFilter("[LegalOpinionId] IS NOT NULL");
 
                     b.HasIndex("UploadedById");
 
@@ -413,8 +415,8 @@ namespace Persistence.Data.Migrations
             modelBuilder.Entity("Domain.Entities.LegalDocument", b =>
                 {
                     b.HasOne("Domain.Entities.LegalOpinion", "LegalOpinion")
-                        .WithMany("LegalDocuments")
-                        .HasForeignKey("LegalOpinionId")
+                        .WithOne("LegalDocument")
+                        .HasForeignKey("Domain.Entities.LegalDocument", "LegalOpinionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Domain.Entities.ApplicationUser", "UploadedBy")
@@ -529,7 +531,7 @@ namespace Persistence.Data.Migrations
 
             modelBuilder.Entity("Domain.Entities.LegalOpinion", b =>
                 {
-                    b.Navigation("LegalDocuments");
+                    b.Navigation("LegalDocument");
 
                     b.Navigation("Reviews");
                 });

@@ -29,6 +29,6 @@ namespace Domain.Entities {
 
 
         public ICollection<OpinionReview>? Reviews { get; set; }
-        public ICollection<LegalDocument>?  LegalDocuments { get; set; }
+        public LegalDocument?  LegalDocument { get; set; }
     }
 }

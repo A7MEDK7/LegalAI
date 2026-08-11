@@ -54,8 +54,8 @@ namespace Persistence.Data.Configurations {
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(x => x.LegalOpinion)
-                .WithMany(x => x.LegalDocuments)
-                .HasForeignKey(x => x.LegalOpinionId)
+                .WithOne(x => x.LegalDocument)         
+                .HasForeignKey<LegalDocument>(x => x.LegalOpinionId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
         }
