@@ -1,7 +1,10 @@
 
 using Domain.Contract;
 using Domain.Entities;
+using LegalAI.Factories;
+using LegalAI.MiddleWares;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Persistence.Data;
 using Persistence.Repositories;
@@ -18,6 +21,10 @@ namespace LegalAI {
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            builder.Services.Configure<ApiBehaviorOptions>(options => {
+                options.InvalidModelStateResponseFactory = ApiResponseFactory
+                                                    .CustomValidationErrorResponse;
+            });
 
             // Add Database Connection String =============
             builder.Services.AddDbContext<AppDbContext>(options => {
@@ -33,6 +40,9 @@ namespace LegalAI {
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             
             var app = builder.Build();
+
+            // Add Custom MiddelWare
+            app.UseMiddleware<GlobalErrorHandelingMiddleware>();
 
             // Initilaize Database
             using (var scope = app.Services.CreateScope()) {
