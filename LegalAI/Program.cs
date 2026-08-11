@@ -29,7 +29,8 @@ namespace LegalAI {
 
             // Add DI For DbInitilazer
             builder.Services.AddScoped<IDbInitilazer, DbInitilazer>();
-
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            
             var app = builder.Build();
 
             // Initilaize Database
