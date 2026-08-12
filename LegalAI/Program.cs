@@ -3,11 +3,21 @@ using Domain.Contract;
 using Domain.Entities;
 using LegalAI.Factories;
 using LegalAI.MiddleWares;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Persistence.Data;
 using Persistence.Repositories;
+using Service.Abstraction.Contracts;
+using Service.Implementations;
+using Service.MappingProfiles;
+using Service.PictureUrlResolver;
+using Shared;
+using Shared.Settings;
+using StackExchange.Redis;
+using System.Text;
 
 namespace LegalAI {
     public class Program {
@@ -21,24 +31,94 @@ namespace LegalAI {
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.Configure<ApiBehaviorOptions>(options => {
-                options.InvalidModelStateResponseFactory = ApiResponseFactory
-                                                    .CustomValidationErrorResponse;
-            });
-
             // Add Database Connection String =============
             builder.Services.AddDbContext<AppDbContext>(options => {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnections"));
             });
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
-                            .AddEntityFrameworkStores<AppDbContext>()
-                            .AddDefaultTokenProviders();
+            // Add Redis Connection Multiplexer To The Services
+            builder.Services.AddSingleton<IConnectionMultiplexer>(
+                _ => ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!)
+            );
 
             // Add DI For DbInitilazer
             builder.Services.AddScoped<IDbInitilazer, DbInitilazer>();
+
+            // Add DI For UnitOfWork
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            
+
+            //Add DI To ServiceManger =============
+           builder.Services.AddScoped<IServiceManger, ServiceManger>();
+
+            // Add DI To Attachment Service =============
+            builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+
+            // Add DI To Cache Service =============
+            builder.Services.AddScoped<ICacheService, CacheService>();
+
+            // Add DI To Attachment Service =============
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
+            // Add DI To Attachment Service =============
+            builder.Services.AddScoped<ICacheRepository, CacheRepository>();
+
+            // Add DI To Password Service =============
+            builder.Services.AddScoped<IPasswordService, PasswordService>();
+
+            // Add DI For File Storage Service
+            builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+
+            // Add DI To Picture URL Resolver =============
+            builder.Services.AddScoped<UserPictureUrlResolver>();
+
+            // Add AutoMapper Profiles To Services =============
+            builder.Services.AddAutoMapper(M => M.AddProfile(new UserProfile()));
+
+            // Configure FileStorage Section In appsetting.json
+            builder.Services.Configure<FileStorageSettings>(builder.Configuration.GetSection("FileStorage"));
+
+            // Add Service For Bad Request Erorr Handling =============
+            builder.Services.Configure<ApiBehaviorOptions>(options => {
+                options.InvalidModelStateResponseFactory = ApiResponseFactory.CustomValidationErrorResponse;
+            });
+
+            // Configure The Identity Rules And Password =============
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options => {
+                options.Password.RequireDigit = true;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 8;
+            }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+
+            // Register JwtOptions in DI Container =============
+            builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
+
+            var jwtOptions = builder.Configuration.GetSection("JwtOptions").Get<JwtOptions>();
+
+            builder.Services.AddAuthentication(options => {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                // LOG OR NOT
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options => {
+                options.TokenValidationParameters = new TokenValidationParameters {
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+
+                    ValidAudience = jwtOptions!.Audience,
+                    ValidIssuer = jwtOptions.Issuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+
+                    ClockSkew = TimeSpan.Zero
+                };
+
+            });
+
+            builder.Services.AddAuthorization();
+
+
             var app = builder.Build();
 
             // Add Custom MiddelWare
@@ -56,6 +136,8 @@ namespace LegalAI {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseStaticFiles();
 
             app.UseHttpsRedirection();
 
