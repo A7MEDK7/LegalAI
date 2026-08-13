@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace Shared.DTOs.IdentityModule {
     public enum RolesDTO {
         Lawyer = 1,
-        LegalAdvisor = 2,
-        LegalManger = 3,
-        SystemAdmin = 4,
+        Legal_Advisor = 2,
+        Legal_Manager = 3,
+        System_Administrator = 4,
     }
 }

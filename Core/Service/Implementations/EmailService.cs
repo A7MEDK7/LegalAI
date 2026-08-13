@@ -10,13 +10,12 @@ using System.Threading.Tasks;
 
 namespace Service.Implementations {
     public class EmailService : IEmailService {
-
         public async Task SendEmail(Email email) {
 
             // 1. Configure SMTP Client
             using var client = new SmtpClient("smtp.gmail.com", 587) {
                 EnableSsl = true,
-                Credentials = new NetworkCredential("a7medkk9900@gmail.com", "Kofta")
+                Credentials = new NetworkCredential("a7medkk9900@gmail.com", "KOFTA")
             };
 
             // 2. Create Mail Message

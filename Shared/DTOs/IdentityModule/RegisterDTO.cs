@@ -22,10 +22,18 @@ namespace Shared.DTOs.IdentityModule {
 
         [Required(ErrorMessage = "Password Is Required!")]
         public string Password { get; set; } = null!;
-        public string? PhoneNumber { get; set; }
-        public string? Address { get; set; }
-        public string? Governorate { get; set; }
+
+        [Required(ErrorMessage = "PhoneNumber Is Required!")]
+        public string PhoneNumber { get; set; } = null!;
+
+        [Required(ErrorMessage = "Address Is Required!")]
+        public string Address { get; set; } = null!;
+
+        [Required(ErrorMessage = "Governorate Is Required!")]
+        public string Governorate { get; set; } = null!;
+
         public IFormFile? ProfilePicture { get; set; }
+
         public string Token { get; set; } = null!;
     }
 }

@@ -21,6 +21,11 @@ namespace Service.Implementations {
             if (user is null)
                 throw new BadRequestException("Email Not Found");
 
+            // Rate limiting To Avoid Spam
+            var existingCode = await cacheService.GetCachedValueAsync($"ResetCode:{dto.Email}");
+            if (existingCode is not null)
+                throw new BadRequestException("Code Already Sent, Please Wait And Try Again.");
+
             // Generate 6 Digit Code
             var code = new Random().Next(100000, 999999).ToString();
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Service.Abstraction.Contracts {
     public interface IServiceManger {
         public IAuthenticationService AuthenticationService { get; }
+        public IPrivilegesAdminService PrivilegesAdminService { get; }
         public ICacheService CacheService { get; }
         public IPasswordService PasswordService { get; }
     }

@@ -24,8 +24,7 @@ namespace LegalAI {
         public static async Task Main(string[] args) {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
+            #region ===== Add Services To The Container =====
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -48,7 +47,7 @@ namespace LegalAI {
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             //Add DI To ServiceManger =============
-           builder.Services.AddScoped<IServiceManger, ServiceManger>();
+            builder.Services.AddScoped<IServiceManger, ServiceManger>();
 
             // Add DI To Attachment Service =============
             builder.Services.AddScoped<IAttachmentService, AttachmentService>();
@@ -116,11 +115,16 @@ namespace LegalAI {
 
             });
 
-            builder.Services.AddAuthorization();
-
+            // Add Policy For Admin Actions =============
+            builder.Services.AddAuthorization(options => {
+                options.AddPolicy("SystemAdministrator", policy =>
+                    policy.RequireRole("System Administrator"));
+            }); 
+            #endregion
 
             var app = builder.Build();
 
+            #region ===== Kestrel MiddelWare =====
             // Add Custom MiddelWare
             app.UseMiddleware<GlobalErrorHandelingMiddleware>();
 
@@ -145,7 +149,8 @@ namespace LegalAI {
 
             app.UseAuthorization();
 
-            app.MapControllers();
+            app.MapControllers(); 
+            #endregion
 
             app.Run();
         }

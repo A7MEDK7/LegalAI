@@ -175,6 +175,11 @@ namespace Service.Implementations {
             // Check If The New Email Already Exists For Another User
             if (await CheckEmailExist(newEmail)) throw new BadRequestException("This Email Is Already Exist");
 
+            // Rate limiting To Avoid Spam
+            var existingCode = await cacheService.GetCachedValueAsync($"ChangeEmail:{userId}");
+            if (existingCode is not null)
+                throw new BadRequestException("Code Already Sent, Please Wait And Try Again.");
+
             // Generate Random 6-Digit OTP Code
             var code = new Random().Next(100000, 999999).ToString();
 
