@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Service.Abstraction.Contracts;
 using Shared.DTOs.IdentityModule;
 using System;
@@ -8,6 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Presentation.Controllers {
+
+    // Will Be Auth For System Administrator Only
+    [Authorize(Policy = "SystemAdministrator")]
     [ApiController]
     [Route("api/[controller]")]
     public class PasswordController(IServiceManger serviceManger) : ControllerBase {

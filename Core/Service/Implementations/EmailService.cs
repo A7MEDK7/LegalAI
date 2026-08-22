@@ -15,15 +15,14 @@ namespace Service.Implementations {
             // 1. Configure SMTP Client
             using var client = new SmtpClient("smtp.gmail.com", 587) {
                 EnableSsl = true,
-                Credentials = new NetworkCredential("a7medkk9900@gmail.com", "KOFTA")
+                Credentials = new NetworkCredential("Email", "Password")
             };
 
             // 2. Create Mail Message
             using var mailMessage = new MailMessage {
-                From = new MailAddress("a7medkk9900@gmail.com", "Legal AI System"),
+                From = new MailAddress("Email", "Legal AI System"),
                 Subject = email.Subject,
                 Body = email.Body,
-                IsBodyHtml = true // IMPORTANT
             };
 
             // 3. Add Receiver
