@@ -223,8 +223,13 @@ namespace Service.Implementations {
             if (userId == currentUserId)
                 throw new BadRequestException("You Cannot Delete Your Own Account.");
 
-            // Check If The Id Is For Another Admin Or Super Admin
+            // Check If The Id Is For Admin
             var roles = await userManager.GetRolesAsync(user);
+
+            // Check If User Is System Admin
+            if (roles.Contains("System Administrator")) {
+                throw new BadRequestException("You Cannot Delete System Administrator");
+            }
 
             // Check Legal Advisor Activities 
             if (roles.Contains("Legal Advisor")) {
@@ -288,6 +293,14 @@ namespace Service.Implementations {
         private async Task<bool> ModifyUserState(string userId, bool state) {
             var user = await userManager.FindByIdAsync(userId);
             if (user is null) throw new UserNotFoundException(userId);
+
+            // Check If The Id Is Super Admin
+            var roles = await userManager.GetRolesAsync(user);
+
+            // Check If User Is System Admin
+            if (roles.Contains("System Administrator")) {
+                throw new BadRequestException("You Cannot Modify System Administrator");
+            }
 
             // Check If The ID Is For The Admin
             var currentUserId = GetCurrentUserId();

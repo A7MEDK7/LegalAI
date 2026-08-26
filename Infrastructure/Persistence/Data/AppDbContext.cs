@@ -12,6 +12,7 @@ namespace Persistence.Data {
         public DbSet<LegalDocument> LegalDocuments { get; set; }
         public DbSet<LegalOpinion> LegalOpinions { get; set; }
         public DbSet<OpinionReview> OpinionReviews { get; set; }
+        public DbSet<UnknownQuestion> UnknownQuestions { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder) {

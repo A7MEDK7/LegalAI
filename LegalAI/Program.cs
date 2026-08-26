@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Persistence.Data;
 using Persistence.Repositories;
@@ -81,6 +82,18 @@ namespace LegalAI {
                 options.InvalidModelStateResponseFactory = ApiResponseFactory.CustomValidationErrorResponse;
             });
 
+            // Add AI Service
+            builder.Services.Configure<LegalAiOptions>(builder.Configuration.GetSection("LegalAiService"));
+
+            builder.Services.AddHttpClient<ILegalAiService, LegalAiService>((sp, client) => {
+                var options = sp.GetRequiredService<IOptions<LegalAiOptions>>().Value;
+                client.BaseAddress = new Uri(options.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
+            })
+                .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler {
+                    RequestHeaderEncodingSelector = (headerName, request) => Encoding.UTF8
+                });
+
             // Configure The Identity Rules And Password =============
             builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>(options => {
                 options.Password.RequireDigit = true;
@@ -119,7 +132,10 @@ namespace LegalAI {
             builder.Services.AddAuthorization(options => {
                 options.AddPolicy("SystemAdministrator", policy =>
                     policy.RequireRole("System Administrator"));
-            }); 
+            });
+
+
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             #endregion
 
             var app = builder.Build();

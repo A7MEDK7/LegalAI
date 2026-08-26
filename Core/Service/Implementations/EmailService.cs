@@ -15,7 +15,7 @@ namespace Service.Implementations {
             // 1. Configure SMTP Client
             using var client = new SmtpClient("smtp.gmail.com", 587) {
                 EnableSsl = true,
-                Credentials = new NetworkCredential("Email", "Password")
+                Credentials = new NetworkCredential("Email", "PassWord")
             };
 
             // 2. Create Mail Message

@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 namespace Domain.Entities.Enums {
     public enum DocumentStatus {
         Processing = 1,
-        Indexed = 2,
-        Failed = 3,
-        Archived = 4
+        Failed = 2,
+        Indexed = 3
     }
 }

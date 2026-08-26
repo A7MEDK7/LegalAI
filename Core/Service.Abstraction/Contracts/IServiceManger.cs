@@ -10,5 +10,7 @@ namespace Service.Abstraction.Contracts {
         public IPrivilegesAdminService PrivilegesAdminService { get; }
         public ICacheService CacheService { get; }
         public IPasswordService PasswordService { get; }
+        public ILegalOpinionService LegalOpinionService { get; }
+        public IUnknownQuestionService UnknownQuestionService { get; }
     }
 }

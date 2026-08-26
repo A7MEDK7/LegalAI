@@ -22,8 +22,6 @@ namespace Domain.Entities {
 
         public string? Category { get; set; }
 
-        public string Language { get; set; } = null!;
-
         public DocumentStatus Status { get; set; }
          
 

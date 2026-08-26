@@ -1,5 +1,6 @@
 ﻿using Domain.Excpetions;
 using Domain.Excpetions.IdentityModule;
+using Domain.Excpetions.LegalAiModule;
 using Shared.ErrorModels;
 using System.Net;
 
@@ -42,6 +43,7 @@ namespace LegalAI.MiddleWares {
                 NotFoundExcpetion => (int) HttpStatusCode.NotFound, // 404
                 BadRequestException => (int) HttpStatusCode.BadRequest, // 400
                 UnAuthorizedException => StatusCodes.Status401Unauthorized, // 401
+                AiServiceUnavailableException => StatusCodes.Status503ServiceUnavailable,
                 ValidationException validationException => HandleValidationException(validationException, response),
                 _ => (int)HttpStatusCode.InternalServerError // 500
             };

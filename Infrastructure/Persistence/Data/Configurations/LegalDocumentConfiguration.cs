@@ -37,10 +37,6 @@ namespace Persistence.Data.Configurations {
             builder.Property(x => x.Category)
                 .HasMaxLength(150);
 
-            builder.Property(x => x.Language)
-                .HasMaxLength(20)
-                .IsRequired();
-
             builder.Property(x => x.Status)
                 .HasConversion<int>()
                 .IsRequired();

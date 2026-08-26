@@ -159,11 +159,6 @@ namespace Persistence.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<int?>("LegalOpinionId")
                         .HasColumnType("int");
 
@@ -277,6 +272,35 @@ namespace Persistence.Data.Migrations
                     b.HasIndex("ReviewerId");
 
                     b.ToTable("OpinionReviews", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.UnknownQuestion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AskedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AskedById");
+
+                    b.ToTable("UnknownQuestions", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
@@ -465,6 +489,17 @@ namespace Persistence.Data.Migrations
                     b.Navigation("LegalOpinion");
 
                     b.Navigation("Reviewer");
+                });
+
+            modelBuilder.Entity("Domain.Entities.UnknownQuestion", b =>
+                {
+                    b.HasOne("Domain.Entities.ApplicationUser", "AskedBy")
+                        .WithMany()
+                        .HasForeignKey("AskedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AskedBy");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
