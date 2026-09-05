@@ -45,7 +45,6 @@ namespace Persistence.Repositories {
                     // Serialize object only once before storing in Redis
                     serializedObject = JsonSerializer.Serialize(value);
                 }
-
                 // Store serialized value in Redis with expiration time
                 await database.StringSetAsync(key, serializedObject, duration);
             } catch {

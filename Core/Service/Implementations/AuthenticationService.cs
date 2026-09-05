@@ -22,9 +22,7 @@ namespace Service.Implementations {
         IConfiguration config,
         IOptions<JwtOptions> options,
         IHttpContextAccessor httpContextAccessor,
-        IMapper mapper,
-        ICacheService cacheService,
-        IEmailService emailService) : IAuthenticationService {
+        IMapper mapper) : IAuthenticationService {
 
         public async Task<UserResultDTO> LoginAsync(LoginDTO loginDto) {
             // Check If There Is User Under This Email
@@ -41,9 +39,13 @@ namespace Service.Implementations {
             // Return User & Create Token
             var baseUrl = config["ApiBaseUrl"];
 
+            // Get User Role
+            var role = await _userManager.GetRolesAsync(user);
+
             return new UserResultDTO(
                 user.FirstName,
                 user.UserName!,
+                role.FirstOrDefault()!,
                 user.Email!,
                 profilePicture: user.ProfilePicture is null ? "No Profile Picture" : $"{baseUrl}files/UsersImages/{user.ProfilePicture}", // Resolve The Picture
                 await CreateTokenAsync(user)
@@ -55,7 +57,11 @@ namespace Service.Implementations {
             var user = await _userManager.FindByIdAsync(userId);
             if (user is null) throw new UserNotFoundException(userId);
             if (!user.IsActive) throw new UnAuthorizedException("Your Account Has Been Deactivated. Please Contact Support.");
-            return mapper.Map<UserProfileResultDTO>(user);
+            var resultUser = mapper.Map<UserProfileResultDTO>(user);
+            // Get User Role
+            var role = await _userManager.GetRolesAsync(user);
+            resultUser.Role = role.FirstOrDefault()!;
+            return resultUser;
         }
 
         public async Task<UserProfileResultDTO> DeleteUserPictureAsync() {
@@ -84,7 +90,11 @@ namespace Service.Implementations {
                 throw new BadRequestException("There Is No Picture To Delete It.");
             }
 
-            return mapper.Map<UserProfileResultDTO>(user);
+            var resultUser = mapper.Map<UserProfileResultDTO>(user);
+            // Get User Role
+            var role = await _userManager.GetRolesAsync(user);
+            resultUser.Role = role.FirstOrDefault()!;
+            return resultUser;
         }
 
         public async Task<UserProfileResultDTO> UpdateProfileAsync(UpdateProfileDTO updateDto) {
@@ -156,90 +166,11 @@ namespace Service.Implementations {
                 throw new ValidationException(errors);
             }
 
-            return mapper.Map<UserProfileResultDTO>(user);
-        }
-
-        public async Task<bool> RequestEmailChangeAsync(string newEmail) {
-            // Get Current Logged-In User Id From Token
-            var userId = GetCurrentUserId();
-            
-            // Check The Email Value
-            if (newEmail is null) throw new BadRequestException("Email Is Required");
-
-            // Retrieve The User From Database
-            var user = await _userManager.FindByIdAsync(userId);
-
-            // Validate That User Exists
-            if (user is null) throw new UserNotFoundException(userId);
-
-            // Check If The New Email Already Exists For Another User
-            if (await CheckEmailExist(newEmail)) throw new BadRequestException("This Email Is Already Exist");
-
-            // Rate limiting To Avoid Spam
-            var existingCode = await cacheService.GetCachedValueAsync($"ChangeEmail:{userId}");
-            if (existingCode is not null)
-                throw new BadRequestException("Code Already Sent, Please Wait And Try Again.");
-
-            // Generate Random 6-Digit OTP Code
-            var code = new Random().Next(100000, 999999).ToString();
-
-            // Store New Email And Code In Cache Temporarily (5 Minutes Expiration)
-            await cacheService.SetCacheValueAsync(
-                $"ChangeEmail:{userId}",
-                $"{newEmail}|||{code}",
-                TimeSpan.FromMinutes(5)
-            );
-
-            // Send Verification Code To The New Email Address
-            await emailService.SendEmail(new Email {
-                To = newEmail,
-                Subject = "Email Change Request",
-                Body = $"Here Is The Verification Code To Change Your Email Address:{code}"
-            });
-
-            // Return Success Response
-            return true;
-        }
-
-        public async Task<UserProfileResultDTO> ConfirmEmailChangeAsync(string code) {
-            // Get Current Logged-In User Id From Token
-            var userId = GetCurrentUserId();
-
-            // Retrieve The User From Database
-            var user = await _userManager.FindByIdAsync(userId);
-
-            // Validate That User Exists
-            if (user is null)
-                throw new UserNotFoundException(userId);
-
-            // Retrieve Cached Data (Email + Code)
-            var cached = await cacheService.GetCachedValueAsync($"ChangeEmail:{userId}");
-
-            // Validate That Cache Still Exists (Not Expired)
-            if (cached is null)
-                throw new BadRequestException("Expired Or Invalid Request");
-
-            // Split Cached Data Into Email And Code
-            var parts = cached.Split("|||");
-            var newEmail = parts[0];
-            var cachedCode = parts[1];
-
-            // Validate That Entered Code Matches Stored Code
-            if (cachedCode.Trim('"') != code)
-                throw new BadRequestException("Invalid Code");
-
-            // Update Email Only After Successful Verification
-            var result = await _userManager.SetEmailAsync(user, newEmail.Trim('"'));
-
-            // Handle Identity Errors If Update Fails
-            if (!result.Succeeded)
-                throw new ValidationException(result.Errors.Select(e => e.Description).ToList());
-
-            // Remove Cached Data (One-Time Use)
-            await cacheService.RemoveCacheValueAsync($"ChangeEmail:{userId}");
-
-            // Return Success Response
-            return mapper.Map<UserProfileResultDTO>(user);
+            var resultUser = mapper.Map<UserProfileResultDTO>(user);
+            // Get User Role
+            var role = await _userManager.GetRolesAsync(user);
+            resultUser.Role = role.FirstOrDefault()!;
+            return resultUser;
         }
 
         #region === HELPER METHOD ===
@@ -278,12 +209,6 @@ namespace Service.Implementations {
                 );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        // For Check The Email If Is Exist In DB Already
-        private async Task<bool> CheckEmailExist(string email) {
-            var user = await _userManager.FindByEmailAsync(email);
-            return user != null; // value != null ==> true, null != null ==> false
         }
 
         // For Get The Current User By His Token

@@ -44,6 +44,16 @@ namespace Presentation.Controllers {
             => Ok(await serviceManger.PrivilegesAdminService.AddNewUserAsync(dto, role));
         #endregion
 
+        #region ==== Change User Email Address ====
+        [HttpPost("RequestChangeEmail")] // POST : BaseUrl/api/PrivilegesAdmin/RequestChangeEmail
+        public async Task<ActionResult> RequestEmailChange([FromBody] RequestEmailChangeDTO dto)
+            => Ok(await serviceManger.PrivilegesAdminService.RequestUserEmailChangeAsync(dto.UserId, dto.Email));
+
+        [HttpPost("ConfirmEmailChange")] // POST : BaseUrl/api/PrivilegesAdmin/ConfirmEmailChange
+        public async Task<ActionResult<UserProfileResultDTO>> ConfirmEmailChange([FromBody] ConfirmEmailChangeDTO dto)
+            => Ok(await serviceManger.PrivilegesAdminService.ConfirmUserEmailChangeAsync(dto.UserId, dto.Code)); 
+        #endregion
+
         #region ==== Block User ====
         [HttpPatch("User/{id}/Block")] // PATCH : BaseUrl/api/PrivilegesAdmin/User/6/Block
         public async Task<ActionResult> BlockUser(string id)

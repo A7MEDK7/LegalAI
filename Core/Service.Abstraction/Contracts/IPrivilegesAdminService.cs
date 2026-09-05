@@ -15,6 +15,9 @@ namespace Service.Abstraction.Contracts {
         Task<UserActivityResultDTO> GetUserByIdWithActivitiesAsync(string userId); // Get User By Id With All His Activities
         Task<IReadOnlyList<UserProfileResultDTO>> SearchUsersAsync(string? name, string? phoneNumber); // Search Users
 
+        Task<bool> RequestUserEmailChangeAsync(int userId, string newEmail); // Change User Email (Request)
+        Task<UserProfileResultDTO> ConfirmUserEmailChangeAsync(int userId, string code); // Change User Email (Confirm)
+
         Task<bool> BlockUserAsync(string userId); // Block User
         Task<bool> ActivateUserAsync(string userId); // Activate User
         Task<bool> DeleteUserAsync(string userId); // Hard Delete User

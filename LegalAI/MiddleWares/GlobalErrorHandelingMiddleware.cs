@@ -45,7 +45,7 @@ namespace LegalAI.MiddleWares {
                 UnAuthorizedException => StatusCodes.Status401Unauthorized, // 401
                 AiServiceUnavailableException => StatusCodes.Status503ServiceUnavailable,
                 ValidationException validationException => HandleValidationException(validationException, response),
-                _ => (int)HttpStatusCode.InternalServerError // 500
+                _ => (int) HttpStatusCode.InternalServerError // 500
             };
             response.StatusCode = httpcontext.Response.StatusCode;
 

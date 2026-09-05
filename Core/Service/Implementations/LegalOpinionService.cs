@@ -249,16 +249,46 @@ namespace Service.Implementations {
         }
 
 
-        // ══════════════ Helper Methods ══════════════
+        // ══════════════ DELETE LEGAL OPINION (Lagal Advisor, Lagal Advisor) ══════════════
+
+        public async Task DeleteAsync(int opinionId, int currentUserId, bool isManager) {
+
+            var spec = new LegalOpinionWithDetailsSpecification(opinionId);
+
+            var opinion = await unitOfWork.GetRepository<LegalOpinion>().GetAsync(spec);
+
+            if (opinion is null)
+                throw new NotFoundExcpetion($"Legal Opinion With Id {opinionId} Was Not Found.");
+
+            // Advisor Can Only Delete Their Own; Manager Can Delete Anything
+            if (!isManager && opinion.CreatedById != currentUserId)
+                throw new BadRequestException("You Can Only Delete Your Own Legal Opinions.");
+
+            if (opinion.Status == OpinionStatus.Approved)
+                throw new BadRequestException("Approved Legal Opinions Cannot Be Deleted.");
+
+            // Delete The Attached File From The Server If It Exists
+            if (opinion.LegalDocument is not null)
+                fileStorage.DeleteFile(opinion.LegalDocument.FilePath);
+
+            // Reviews Will Be Automatically Deleted (Cascade) According To The Existing Configuration
+            unitOfWork.GetRepository<LegalOpinion>().Delete(opinion);
+
+            await unitOfWork.SaveChangesAsync();
+        }
+
+
+        // ══════════════ HELPER METHODS ══════════════
+
         private async Task IndexApprovedOpinionAsync(LegalOpinion opinion) {
 
             bool allIndexed = true;
+            string? qaFilePathToCleanupOnFailure = null;
 
             try {
                 var legalDocumentRepository = unitOfWork.GetRepository<LegalDocument>();
 
                 // ============== 1. Index The Original Legal Document If It Exists ==============
-
                 if (opinion.LegalDocument is not null) {
 
                     var document = opinion.LegalDocument;
@@ -267,11 +297,11 @@ namespace Service.Implementations {
 
                     var documentIndexed = await legalAiService.AddNewOpinionAsync(docStream, document.FileName);
 
-                    if(!documentIndexed) {
+                    if (!documentIndexed) {
                         throw new FailedToAddDocumentException($"Failed To Add Document {document.FileName} To Ai Service Database");
                     }
 
-                    document.Status = documentIndexed ? DocumentStatus.Indexed : DocumentStatus.Failed;
+                    document.Status = DocumentStatus.Indexed;
 
                     legalDocumentRepository.Update(document);
 
@@ -279,7 +309,6 @@ namespace Service.Implementations {
                 }
 
                 // ============== 2. Create And Save Q&A Legal Document If Answer Exists ==============
-
                 if (!string.IsNullOrWhiteSpace(opinion.Answer)) {
 
                     var qaFileName = BuildQaFileName($"Q&A - {opinion.Question}");
@@ -290,11 +319,11 @@ namespace Service.Implementations {
 
                     using var qaStream = new MemoryStream(qaBytes);
 
-                    // Save the Q&A file to File Storage
-
                     var qaFilePath = await fileStorage.SaveFileAsync(qaStream, qaFileName);
 
-                    // Create Real LegalDocument For The Q&A File
+                    // Remember This So We Can Delete It If Anything Below Fails
+
+                    qaFilePathToCleanupOnFailure = qaFilePath;
 
                     var qaDocument = new LegalDocument {
                         Title = $"Q&A - {opinion.Question}",
@@ -308,34 +337,36 @@ namespace Service.Implementations {
                         UploadedById = opinion.CreatedById,
                     };
 
-                    // Index The Q&A File In Legal AI
-
                     qaStream.Position = 0;
-
                     var qaIndexed = await legalAiService.AddNewOpinionAsync(qaStream, qaFileName);
 
                     if (!qaIndexed) {
                         throw new FailedToAddDocumentException($"Failed To Add Document {qaFileName} To Ai Service Database");
                     }
 
-                    qaDocument.Status = qaIndexed ? DocumentStatus.Indexed : DocumentStatus.Failed;
+                    qaDocument.Status = DocumentStatus.Indexed;
 
                     await legalDocumentRepository.AddAsync(qaDocument);
 
                     allIndexed &= qaIndexed;
-                }
 
-                // 3. Update Opinion / Documents
+                    // Only Clear This Once The DB Write Is Queued — SaveChangesAsync Below
+                    // Still Might Fail, In Which Case We Still Want To Clean Up.
+                }
 
                 await unitOfWork.SaveChangesAsync();
 
-            } catch (AiServiceUnavailableException) {
+                // Everything Succeeded And Was Committed — Nothing Left To Clean Up.
+                qaFilePathToCleanupOnFailure = null;
 
-                allIndexed = false;
+            } catch {
+                // ANY Failure Here (FailedToAddDocumentException, AiServiceUnavailableException, Or Anything Else) -> Rollback Everything
+                // Happened: No DB Changes Were Made (The Throw Happened Before SaveChangesAsync),
+                // And Any Physical File Already Written To Disk In This Attempt Must Be Removed.
+                if (qaFilePathToCleanupOnFailure is not null)
+                    fileStorage.DeleteFile(qaFilePathToCleanupOnFailure);
 
-                if (opinion.LegalDocument is not null) {
-                    opinion.LegalDocument.Status = DocumentStatus.Failed;
-                }
+                throw; // Re-throw So ReviewAsync's Status/Review Changes Are Skipped Too
             }
         }
 

@@ -37,8 +37,14 @@ namespace Service.Implementations {
             // Get All Users In Database
             var users = await userManager.Users.ToListAsync();
             // Map To List Of UserProfileResultDTO
-            var result = mapper.Map<IReadOnlyList<UserProfileResultDTO>>(users);
-            // Return Result
+            var result = mapper.Map<List<UserProfileResultDTO>>(users);
+
+            // Get Role For Each User And Assign It
+            for (int i = 0; i < users.Count; i++) {
+                var roles = await userManager.GetRolesAsync(users[i]);
+                result[i].Role = roles.FirstOrDefault()!;
+            }
+
             return result;
         }
 
@@ -56,6 +62,8 @@ namespace Service.Implementations {
                 if (roles.Contains(role)) {
                     // Map To UserProfileResultDTO
                     var userDto = mapper.Map<UserProfileResultDTO>(user);
+                    // Add User Role
+                    userDto.Role = roles.FirstOrDefault()!;
                     // Add To The List
                     result.Add(userDto);
                 }
@@ -75,17 +83,24 @@ namespace Service.Implementations {
             if (user is null)
                 throw new UserNotFoundException(userId);
 
+
+            var resultUser = mapper.Map<UserProfileResultDTO>(user);
+
+            // Get User Role
+            var role = await userManager.GetRolesAsync(user);
+            resultUser.Role = role.FirstOrDefault()!;
+
             return new UserActivityResultDTO {
-                Profile = mapper.Map<UserProfileResultDTO>(user),
+                Profile = resultUser,
 
                 UploadedDocuments = user.UploadedDocuments?
-                    .Select(d => new ActivityItemDTO { Id = d.Id, Title = d.Title }) ?? [],
+                    .Select(d => new ActivityItemDTO { Id = d.Id, Title = d.Title, FileName = d.FileName, Status = d.Status.ToString() }) ?? [],
 
                 CreatedOpinions = user.CreatedOpinions?
-                    .Select(o => new ActivityItemDTO { Id = o.Id, Title = o.Title }) ?? [],
+                    .Select(o => new ActivityItemDTO { Id = o.Id, Title = o.Title, Status = o.Status.ToString() }) ?? [],
 
                 ReviewedOpinions = user.ReviewedOpinions?
-                    .Select(o => new ActivityItemDTO { Id = o.Id, Title = o.Title }) ?? [],
+                    .Select(o => new ActivityItemDTO { Id = o.Id, Title = o.Title, Status = o.Status.ToString() }) ?? [],
 
                 OpinionReviewsCount = user.OpinionReviews?.Count ?? 0
             };
@@ -115,9 +130,14 @@ namespace Service.Implementations {
             var users = query.ToList();
 
             // Map To List Of UserProfileResultDTO
-            var result = mapper.Map<IReadOnlyList<UserProfileResultDTO>>(users);
+            var result = mapper.Map<List<UserProfileResultDTO>>(users);
 
-            // Return Result
+            // Get Role For Each User And Assign It
+            for (int i = 0; i < users.Count; i++) {
+                var roles = await userManager.GetRolesAsync(users[i]);
+                result[i].Role = roles.FirstOrDefault()!;
+            }
+
             return result;
         }
 
@@ -199,13 +219,81 @@ namespace Service.Implementations {
 
             // Return User
             var baseUrl = config["ApiBaseUrl"];
+
             return new UserResultDTO(
                 user.FirstName,
                 user.UserName!,
+                role,
                 user.Email!,
                 profilePicture: user.ProfilePicture is null ? "No Profile Picture" : $"{baseUrl}{user.ProfilePicture}", // Resolve The Picture
                 await CreateTokenAsync(user)
             );
+        }
+
+        public async Task<bool> RequestUserEmailChangeAsync(int userId, string newEmail) {
+
+            if (string.IsNullOrWhiteSpace(newEmail))
+                throw new BadRequestException("New Email Is Required");
+
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+                throw new UserNotFoundException(userId.ToString());
+
+            if (await CheckEmailExist(newEmail))
+                throw new BadRequestException("This Email Is Already Exist");
+
+            // Rate Limiting — Using The Same New Key Associated With The Target UserId
+            var existingCode = await cacheService.GetCachedValueAsync($"AdminChangeEmail:{userId}");
+            if (existingCode is not null)
+                throw new BadRequestException("Code Already Sent, Please Wait And Try Again.");
+
+            var code = new Random().Next(100000, 999999).ToString();
+
+            await cacheService.SetCacheValueAsync(
+                $"AdminChangeEmail:{userId}",
+                $"{newEmail}|||{code}",
+                TimeSpan.FromMinutes(5)
+            );
+
+            await emailService.SendEmail(new Email {
+                To = newEmail,
+                Subject = "Email Change Verification",
+                Body = $"An Administrator Has Requested To Set This Email Address On Your Account. " +
+                       $"Verification Code: {code}"
+            });
+
+            return true;
+        }
+
+        public async Task<UserProfileResultDTO> ConfirmUserEmailChangeAsync(int userId, string code) {
+
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (user is null)
+                throw new UserNotFoundException(userId.ToString());
+
+            var cached = await cacheService.GetCachedValueAsync($"AdminChangeEmail:{userId}");
+            if (cached is null)
+                throw new BadRequestException("Expired Or Invalid Request");
+
+            var parts = cached.Split("|||");
+            var newEmail = parts[0];
+            var cachedCode = parts[1];
+
+            if (cachedCode.Trim('"') != code)
+                throw new BadRequestException("Invalid Code");
+
+            var result = await userManager.SetEmailAsync(user, newEmail.Trim('"'));
+            if (!result.Succeeded)
+                throw new ValidationException(result.Errors.Select(e => e.Description).ToList());
+
+            // One-Time Use
+            await cacheService.RemoveCacheValueAsync($"AdminChangeEmail:{userId}");
+
+            var resultUser = mapper.Map<UserProfileResultDTO>(user);
+            // Get User Role
+            var role = await userManager.GetRolesAsync(user);
+            resultUser.Role = role.FirstOrDefault()!;
+            return resultUser;
         }
 
         public async Task<bool> BlockUserAsync(string userId)

@@ -1,9 +1,10 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.Attributes;
 using Service.Abstraction.Contracts;
 using Shared.DTOs.LegalAiModule;
 using Shared.DTOs.LegalOpinionModule;
+using System.Security.Claims;
 
 namespace Presentation.Controllers {
 
@@ -11,71 +12,81 @@ namespace Presentation.Controllers {
     [ApiController]
     [Route("api/[controller]")]
     public class LegalOpinionController(IServiceManger serviceManger) : ControllerBase {
-
         private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        // ═══════════ ASK FLOW (Lawyer, Legal Advisor) ═══════════
-
-        [Authorize(Roles = "Lawyer,Legal Advisor")]
+        #region ═══════════ ASK FLOW (Lawyer, Legal Advisor) ═══════════
+        [Authorize(Policy = "AdvisorOrLawyer")]
+        [RedisCache(durationInSec: 60)]
         [HttpPost("Ask")]
         public async Task<IActionResult> Ask([FromBody] AskQueryDTO dto)
             => Ok(await serviceManger.LegalOpinionService.AskAsync(dto.Query, CurrentUserId));
 
-        [Authorize(Roles = "Lawyer,Legal Advisor")]
+        [Authorize(Policy = "AdvisorOrLawyer")]
         [HttpGet("Document-By-Source")]
         public async Task<IActionResult> GetDocumentBySource([FromQuery] string fileName) {
             var (stream, resolvedFileName) = await serviceManger.LegalOpinionService.GetDocumentBySourceAsync(fileName);
             return File(stream, "application/octet-stream", resolvedFileName);
         }
+        #endregion
 
-        // ═══════════ ADD NEW OPINION FLOW (Legal Advisor) ═══════════
-
-        [Authorize(Roles = "Legal Advisor")]
+        #region ═══════════ ADD NEW OPINION FLOW (Legal Advisor) ═══════════
+        [Authorize(Policy = "LegalAdvisor")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] CreateLegalOpinionDTO dto)
             => Ok(await serviceManger.LegalOpinionService.CreateAsync(dto, CurrentUserId));
 
-        [Authorize(Roles = "Legal Advisor")]
+        [Authorize(Policy = "LegalAdvisor")]
         [HttpGet("Legal-Advisor-Opinions")]
-        public async Task<IActionResult> GetAdvisorOpinions() 
+        public async Task<IActionResult> GetAdvisorOpinions()
             => Ok(await serviceManger.LegalOpinionService.GetLegalOpinionsForUser(CurrentUserId));
 
-        [Authorize(Roles = "Legal Advisor")]
+        [Authorize(Policy = "LegalAdvisor")]
         [HttpPut("{id}/Resubmit")]
         public async Task<IActionResult> Resubmit(int id, [FromForm] UpdateLegalOpinionDTO dto)
             => Ok(await serviceManger.LegalOpinionService.ResubmitAsync(id, dto, CurrentUserId));
 
-        [Authorize(Roles = "Legal Advisor")]
+        [Authorize(Policy = "LegalAdvisor")]
         [HttpGet("Unknown-Questions")]
         public async Task<IActionResult> GetUnknownQuestions()
             => Ok(await serviceManger.UnknownQuestionService.GetAllAsync());
 
-        [Authorize(Roles = "Legal Advisor")]
+        [Authorize(Policy = "LegalAdvisor")]
         [HttpDelete("Unknown-Questions/{id}")]
         public async Task<IActionResult> DeleteUnknownQuestion(int id) {
             await serviceManger.UnknownQuestionService.DeleteAsync(id);
             return Ok();
         }
+        #endregion
 
-        // ═══════════ REVIEW FLOW (Legal Manager) ═══════════
-
-        [Authorize(Roles = "Legal Manager")]
+        #region ═══════════ REVIEW FLOW (Legal Manager) ═══════════
+        [Authorize(Policy = "LegalManager")]
         [HttpGet]
         public async Task<IActionResult> GetAllForReview()
             => Ok(await serviceManger.LegalOpinionService.GetAllForReviewAsync());
 
-        [Authorize(Roles = "Legal Manager,Legal Advisor")]
+        [Authorize(Policy = "AdvisorOrManger")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id) {
             var isManager = User.IsInRole("Legal Manager");
             return Ok(await serviceManger.LegalOpinionService.GetByIdAsync(id, CurrentUserId, isManager));
         }
 
-        [Authorize(Roles = "Legal Manager")]
+        [Authorize(Policy = "LegalManager")]
         [HttpPost("{id}/Review")]
         public async Task<IActionResult> Review(int id, [FromBody] ReviewOpinionDTO dto) {
             await serviceManger.LegalOpinionService.ReviewAsync(id, dto, CurrentUserId);
             return Ok();
         }
+        #endregion
+
+        #region ═══════════ DELETE LEGAL OPINION (Lagal Advisor, Lagal Advisor) ═══════════
+        [Authorize(Policy = "AdvisorOrManger")]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id) {
+            var isManager = User.IsInRole("Legal Manager");
+            await serviceManger.LegalOpinionService.DeleteAsync(id, CurrentUserId, isManager);
+            return Ok();
+        } 
+        #endregion
     }
 }

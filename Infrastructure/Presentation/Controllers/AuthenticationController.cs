@@ -31,16 +31,6 @@ namespace Presentation.Controllers {
             => Ok(await serviceManger.AuthenticationService.DeleteUserPictureAsync());
 
         [Authorize]
-        [HttpPost("RequestChangeEmail")] // POST : BaseUrl/api/Authentication/RequestChangeEmail
-        public async Task<ActionResult> RequestEmailChange([FromBody] RequestEmailChangeDTO dto)
-            => Ok(await serviceManger.AuthenticationService.RequestEmailChangeAsync(dto.Email));
-
-        [Authorize]
-        [HttpPost("ConfirmEmailChange")] // POST : BaseUrl/api/Authentication/ConfirmEmailChange
-        public async Task<ActionResult<UserProfileResultDTO>> ConfirmEmailChange([FromBody] ConfirmEmailChangeDTO dto)
-            => Ok(await serviceManger.AuthenticationService.ConfirmEmailChangeAsync(dto.Code));
-
-        [Authorize]
         [HttpPut("Profile")] // PUT : BaseUrl/api/Authentication/Profile
         public async Task<ActionResult<UserProfileResultDTO>> UpdateUserProfile([FromForm] UpdateProfileDTO updateProfileDTO)
             => Ok(await serviceManger.AuthenticationService.UpdateProfileAsync(updateProfileDTO));

@@ -10,8 +10,6 @@ namespace Service.Abstraction.Contracts {
         Task<UserResultDTO> LoginAsync(LoginDTO loginDto); // Login
         Task<UserProfileResultDTO> GetUserProfileAsync(); // Get Profile
         Task<UserProfileResultDTO> DeleteUserPictureAsync(); // Delete User Picture
-        Task<bool> RequestEmailChangeAsync(string newEmail); // Request Change The Email
-        Task<UserProfileResultDTO> ConfirmEmailChangeAsync(string code); // Confirm Change The Email
         Task<UserProfileResultDTO> UpdateProfileAsync(UpdateProfileDTO updateDto); // UpdateProfile
     }
 }

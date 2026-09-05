@@ -24,7 +24,7 @@ namespace Service.Implementations {
         ) : IServiceManger {
 
         private readonly Lazy<IAuthenticationService> _authenticationService = new(() =>
-            new AuthenticationService(userManager, attachmentService, config, options, httpContextAccessor, mapper, new CacheService(cacheRepository), emailService));
+            new AuthenticationService(userManager, attachmentService, config, options, httpContextAccessor, mapper));
 
         private readonly Lazy<IPrivilegesAdminService> _privilegesAdminService = new(() =>
             new PrivilegesAdminService(unitOfWork, userManager, mapper, httpContextAccessor, new CacheService(cacheRepository), emailService, config, options, attachmentService));

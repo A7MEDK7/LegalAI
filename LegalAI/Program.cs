@@ -128,10 +128,27 @@ namespace LegalAI {
 
             });
 
-            // Add Policy For Admin Actions =============
+            // Add Policies =============
             builder.Services.AddAuthorization(options => {
+                // Add Policy For Admin Actions ============= 
                 options.AddPolicy("SystemAdministrator", policy =>
                     policy.RequireRole("System Administrator"));
+
+                // Add Policy For Legal Manger Actions =============
+                options.AddPolicy("LegalManager", policy =>
+                    policy.RequireRole("Legal Manager"));
+
+                // Add Policy For Legal Advisor Actions =============
+                options.AddPolicy("LegalAdvisor", policy =>
+                    policy.RequireRole("Legal Advisor"));
+
+                // Add Policy For Legal Advisor And Legal Manger Actions =============
+                options.AddPolicy("AdvisorOrManger", policy =>
+                    policy.RequireRole("Legal Advisor", "Legal Manager"));
+
+                // Add Policy For Legal Advisor And Lawyer Actions =============
+                options.AddPolicy("AdvisorOrLawyer", policy =>
+                    policy.RequireRole("Legal Advisor", "Lawyer"));
             });
 
 

@@ -17,5 +17,8 @@ namespace Service.Abstraction.Contracts {
         Task<IReadOnlyList<LegalOpinionListItemDTO>> GetAllForReviewAsync();
         Task<LegalOpinionResultDTO> GetByIdAsync(int opinionId, int currentUserId, bool isManager);
         Task ReviewAsync(int opinionId, ReviewOpinionDTO dto, int reviewerId);
+
+        // Delete Legal Opinion (Lagal Advisor, Lagal Advisor)
+        Task DeleteAsync(int opinionId, int currentUserId, bool isManager);
     }
 }
