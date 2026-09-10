@@ -146,6 +146,10 @@ namespace LegalAI {
                 options.AddPolicy("AdvisorOrManger", policy =>
                     policy.RequireRole("Legal Advisor", "Legal Manager"));
 
+                // Add Policy For Legal Advisor And Legal Manger Actions =============
+                options.AddPolicy("LawyerOrAdvisorOrManger", policy =>
+                    policy.RequireRole("Legal Advisor", "Legal Manager", "Lawyer"));
+
                 // Add Policy For Legal Advisor And Lawyer Actions =============
                 options.AddPolicy("AdvisorOrLawyer", policy =>
                     policy.RequireRole("Legal Advisor", "Lawyer"));

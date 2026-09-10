@@ -12,7 +12,7 @@ namespace Domain.Entities {
 
         public string Question { get; set; } = null!;
 
-        public string? Answer { get; set; }
+        public string Answer { get; set; } = null!;
 
         public OpinionStatus Status { get; set; }
 

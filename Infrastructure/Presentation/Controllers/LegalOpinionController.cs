@@ -21,11 +21,18 @@ namespace Presentation.Controllers {
         public async Task<IActionResult> Ask([FromBody] AskQueryDTO dto)
             => Ok(await serviceManger.LegalOpinionService.AskAsync(dto.Query, CurrentUserId));
 
-        [Authorize(Policy = "AdvisorOrLawyer")]
+        [Authorize(Policy = "LawyerOrAdvisorOrManger")]
         [HttpGet("Document-By-Source")]
         public async Task<IActionResult> GetDocumentBySource([FromQuery] string fileName) {
             var (stream, resolvedFileName) = await serviceManger.LegalOpinionService.GetDocumentBySourceAsync(fileName);
             return File(stream, "application/octet-stream", resolvedFileName);
+        }
+
+        [Authorize(Policy = "LawyerOrAdvisorOrManger")]
+        [HttpGet("Document/Download")]
+        public async Task<IActionResult> Download([FromQuery] string fileName) {
+            var stream = await serviceManger.LegalOpinionService.DownloadFileAsync(fileName);
+            return File(stream, "application/octet-stream", fileName);
         }
         #endregion
 

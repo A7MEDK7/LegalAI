@@ -7,6 +7,7 @@ namespace Service.Abstraction.Contracts {
         // ---- Ask Flow (Lawyer, Legal Advisor) ----
         Task<AskResultDTO> AskAsync(string query, int currentUserId);
         Task<(Stream Stream, string FileName)> GetDocumentBySourceAsync(string sourceFileName);
+        Task<Stream> DownloadFileAsync(string fileName);
 
         // ---- AddNewOpinion Flow (Legal Advisor) ----
         Task<LegalOpinionResultDTO> CreateAsync(CreateLegalOpinionDTO dto, int currentUserId);

@@ -11,7 +11,7 @@ namespace Shared.DTOs.LegalOpinionModule {
         public string Title { get; set; } = null!;
         public string Question { get; set; } = null!;
         public string? Answer { get; set; }
-        public OpinionStatus Status { get; set; }
+        public string Status { get; set; } = null!;
 
         public string CreatedByName { get; set; } = null!;
         public DateTime CreatedAt { get; set; }

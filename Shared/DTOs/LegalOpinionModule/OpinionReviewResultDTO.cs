@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Shared.DTOs.LegalOpinionModule {
     public class OpinionReviewResultDTO {
         public string ReviewerName { get; set; } = null!;
-        public ReviewDecision Decision { get; set; }
+        public string Decision { get; set; } = null!;
         public string? Comments { get; set; }
         public DateTime CreatedAt { get; set; }
     }

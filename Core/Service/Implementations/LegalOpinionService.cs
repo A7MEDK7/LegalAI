@@ -42,6 +42,13 @@ namespace Service.Implementations {
             return (stream, document.FileName);
         }
 
+        public async Task<Stream> DownloadFileAsync(string fileName) {
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new BadRequestException("File Name Is Required.");
+
+            return await fileStorage.GetFileAsync(fileName);
+        }
+
         // ══════════════ ADD NEW OPINION FLOW (Legal Advisor) ══════════════
 
         public async Task<IReadOnlyList<LegalOpinionListItemDTO>> GetLegalOpinionsForUser(int currentUserId) {
@@ -53,7 +60,7 @@ namespace Service.Implementations {
             return opinions.Select(o => new LegalOpinionListItemDTO {
                 Id = o.Id,
                 Title = o.Title,
-                Status = o.Status,
+                Status = o.Status.ToString(),
                 CreatedByName = o.CreatedBy.FirstName,
                 CreatedAt = o.CreatedAt,
                 HasDocument = o.LegalDocument is not null
@@ -147,7 +154,7 @@ namespace Service.Implementations {
             return opinions.Select(o => new LegalOpinionListItemDTO {
                 Id = o.Id,
                 Title = o.Title,
-                Status = o.Status,
+                Status = o.Status.ToString(),
                 CreatedByName = o.CreatedBy.FirstName,
                 CreatedAt = o.CreatedAt,
                 HasDocument = o.LegalDocument is not null
@@ -169,7 +176,7 @@ namespace Service.Implementations {
                 Title = opinion.Title,
                 Question = opinion.Question,
                 Answer = opinion.Answer,
-                Status = opinion.Status,
+                Status = opinion.Status.ToString(),
                 CreatedByName = opinion.CreatedBy.FirstName,
                 CreatedAt = opinion.CreatedAt,
                 ReviewedByName = opinion.ReviewedBy?.FirstName,
@@ -179,11 +186,11 @@ namespace Service.Implementations {
                     FileName = opinion.LegalDocument.FileName,
                     FileType = opinion.LegalDocument.FileType,
                     FileSize = opinion.LegalDocument.FileSize,
-                    Status = opinion.LegalDocument.Status
+                    Status = opinion.LegalDocument.Status.ToString()
                 },
                 Reviews = opinion.Reviews?.Select(r => new OpinionReviewResultDTO {
                     ReviewerName = r.Reviewer.FirstName,
-                    Decision = r.Decision,
+                    Decision = r.Decision.ToString(),
                     Comments = r.Comments,
                     CreatedAt = r.CreatedAt
                 }) ?? []

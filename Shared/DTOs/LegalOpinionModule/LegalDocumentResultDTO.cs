@@ -11,6 +11,6 @@ namespace Shared.DTOs.LegalOpinionModule {
         public string FileName { get; set; } = null!;
         public string FileType { get; set; } = null!;
         public long FileSize { get; set; }
-        public DocumentStatus Status { get; set; }
+        public string Status { get; set; } = null!;
     }
 }

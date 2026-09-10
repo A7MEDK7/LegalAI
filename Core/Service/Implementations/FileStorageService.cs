@@ -47,12 +47,24 @@ namespace Service.Implementations {
         }
 
         public Task<Stream> GetFileAsync(string storedFileName) {
-            var fullPath = Path.Combine(_rootPath, storedFileName);
 
-            if (!File.Exists(fullPath))
+            var safeFileName = Path.GetFileName(storedFileName);
+
+            if (string.IsNullOrWhiteSpace(safeFileName))
+                throw new BadRequestException("Invalid File Name.");
+
+            var fullPath = Path.Combine(_rootPath, safeFileName);
+
+            var resolvedFullPath = Path.GetFullPath(fullPath);
+            var resolvedRoot = Path.GetFullPath(_rootPath);
+            if (!resolvedFullPath.StartsWith(resolvedRoot, StringComparison.OrdinalIgnoreCase))
+                throw new BadRequestException("Invalid File Path.");
+
+            if (!File.Exists(resolvedFullPath))
                 throw new NotFoundExcpetion($"File '{storedFileName}' Was Not Found In Storage.");
 
-            Stream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+            Stream stream = new FileStream(resolvedFullPath, FileMode.Open, FileAccess.Read);
+
             return Task.FromResult(stream);
         }
 
