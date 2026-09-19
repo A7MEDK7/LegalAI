@@ -157,6 +157,16 @@ namespace LegalAI {
 
 
             Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+
+            // Add CORS
+            builder.Services.AddCors(options => {
+                options.AddPolicy("AllowAll", policy => {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
             #endregion
 
             var app = builder.Build();
@@ -182,11 +192,14 @@ namespace LegalAI {
 
             app.UseHttpsRedirection();
 
+            app.UseCors("AllowAll");
+
             app.UseAuthentication();
 
             app.UseAuthorization();
 
-            app.MapControllers(); 
+            app.MapControllers();
+
             #endregion
 
             app.Run();

@@ -12,5 +12,6 @@ namespace Service.Abstraction.Contracts {
         public IPasswordService PasswordService { get; }
         public ILegalOpinionService LegalOpinionService { get; }
         public IUnknownQuestionService UnknownQuestionService { get; }
+        public IConversationService ConversationService { get; }
     }
 }

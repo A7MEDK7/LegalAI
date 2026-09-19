@@ -20,18 +20,6 @@ namespace Service.Implementations {
 
         // ══════════════ ASK FLOW ══════════════
 
-        public async Task<AskResultDTO> AskAsync(string query, int currentUserId) {
-            // Check If Question Is In Unknown Question
-            await unknownQuestionService.CheckExistQuestion(query);
-            // Get Ai Service And Ask The Question
-            var result = await legalAiService.AskAsync(query);
-            // If No There Answer Then Add This Question To Unknown Question
-            if (!result.Found) {
-                await unknownQuestionService.AddAsync(query, currentUserId);
-            }
-            return result;
-        }
-
         public async Task<(Stream Stream, string FileName)> GetDocumentBySourceAsync(string sourceFileName) {
             var document = await unitOfWork.GetRepository<LegalDocument>().GetAsync(d => d.FileName == sourceFileName);
 
@@ -47,6 +35,15 @@ namespace Service.Implementations {
                 throw new BadRequestException("File Name Is Required.");
 
             return await fileStorage.GetFileAsync(fileName);
+        }
+
+        public async Task<IReadOnlyList<SuggestedQuestionDTO>> GetSuggestedQuestionsAsync(int count = 10) {
+
+            var spec = new RandomApprovedOpinionsSpecification(count);
+
+            var opinions = await unitOfWork.GetRepository<LegalOpinion>().GetAllAsync(spec);
+
+            return opinions.Select(o => new SuggestedQuestionDTO { Id = o.Id, Question = o.Question }).ToList();
         }
 
         // ══════════════ ADD NEW OPINION FLOW (Legal Advisor) ══════════════

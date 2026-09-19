@@ -14,12 +14,11 @@ namespace Presentation.Controllers {
     public class LegalOpinionController(IServiceManger serviceManger) : ControllerBase {
         private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        #region ═══════════ ASK FLOW (Lawyer, Legal Advisor) ═══════════
-        [Authorize(Policy = "AdvisorOrLawyer")]
-        [RedisCache(durationInSec: 60)]
-        [HttpPost("Ask")]
-        public async Task<IActionResult> Ask([FromBody] AskQueryDTO dto)
-            => Ok(await serviceManger.LegalOpinionService.AskAsync(dto.Query, CurrentUserId));
+        #region ═══════════ GET FLOW (Lawyer, Legal Advisor, Legal Manger) ═══════════
+        [Authorize(Policy = "LawyerOrAdvisorOrManger")]
+        [HttpGet("Suggested-Questions")]
+        public async Task<IActionResult> GetSuggestedQuestions([FromQuery] int count = 10)
+            => Ok(await serviceManger.LegalOpinionService.GetSuggestedQuestionsAsync(count));
 
         [Authorize(Policy = "LawyerOrAdvisorOrManger")]
         [HttpGet("Document-By-Source")]

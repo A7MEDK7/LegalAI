@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Shared.DTOs.LegalAiModule {
+﻿namespace Shared.DTOs.LegalAiModule {
     public class AskResultDTO {
         public string Answer { get; set; } = null!;
-        public string Source { get; set; } = null!;
+        public IEnumerable<CitationDTO> Citations { get; set; } = [];
 
-        // To Check The Source
-        public bool Found => !string.IsNullOrWhiteSpace(Source);
+        public bool Found => Citations.Any();
     }
 }

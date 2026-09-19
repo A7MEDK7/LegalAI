@@ -13,7 +13,7 @@ namespace Persistence.Data {
         public DbSet<LegalOpinion> LegalOpinions { get; set; }
         public DbSet<OpinionReview> OpinionReviews { get; set; }
         public DbSet<UnknownQuestion> UnknownQuestions { get; set; }
-
+        public DbSet<Conversation> Conversations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder) {
             base.OnModelCreating(builder);

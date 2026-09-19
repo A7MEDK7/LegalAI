@@ -13,7 +13,8 @@ namespace Service.Implementations {
 
             var entity = new UnknownQuestion {
                 Question = question,
-                AskedById = askedById
+                AskedById = askedById,
+                CreatedAt = DateTime.Now,
             };
 
             await unknownQuestionRepo.AddAsync(entity);

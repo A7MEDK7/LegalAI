@@ -3,11 +3,9 @@ using Shared.DTOs.LegalOpinionModule;
 
 namespace Service.Abstraction.Contracts {
     public interface ILegalOpinionService {
-
-        // ---- Ask Flow (Lawyer, Legal Advisor) ----
-        Task<AskResultDTO> AskAsync(string query, int currentUserId);
         Task<(Stream Stream, string FileName)> GetDocumentBySourceAsync(string sourceFileName);
         Task<Stream> DownloadFileAsync(string fileName);
+        Task<IReadOnlyList<SuggestedQuestionDTO>> GetSuggestedQuestionsAsync(int count = 10);
 
         // ---- AddNewOpinion Flow (Legal Advisor) ----
         Task<LegalOpinionResultDTO> CreateAsync(CreateLegalOpinionDTO dto, int currentUserId);

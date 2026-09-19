@@ -12,14 +12,10 @@ using Microsoft.IdentityModel.Tokens;
 using Service.Abstraction.Contracts;
 using Shared;
 using Shared.DTOs.IdentityModule;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Service.Implementations {
     public class PrivilegesAdminService(

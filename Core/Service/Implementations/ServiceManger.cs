@@ -41,11 +41,16 @@ namespace Service.Implementations {
         private readonly Lazy<ILegalOpinionService> _legalOpinionService = new(() =>
             new LegalOpinionService(unitOfWork, legalAiService, fileStorageService, new UnknownQuestionService(unitOfWork)));
 
+        private readonly Lazy<IConversationService> _conversationService = new(() =>
+            new ConversationService(unitOfWork, legalAiService, new UnknownQuestionService(unitOfWork)));
+
+
         public IAuthenticationService AuthenticationService => _authenticationService.Value;
         public IPrivilegesAdminService PrivilegesAdminService => _privilegesAdminService.Value;
         public ICacheService CacheService => _cacheService.Value;
         public IPasswordService PasswordService => _passwordService.Value;
         public IUnknownQuestionService UnknownQuestionService => _unknownQuestionService.Value;
         public ILegalOpinionService LegalOpinionService => _legalOpinionService.Value;
+        public IConversationService ConversationService => _conversationService.Value;
     }
 }
