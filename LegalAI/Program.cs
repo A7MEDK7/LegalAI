@@ -77,6 +77,9 @@ namespace LegalAI {
             // Configure FileStorage Section In appsetting.json
             builder.Services.Configure<FileStorageSettings>(builder.Configuration.GetSection("FileStorage"));
 
+            // Configure Legal Document Seeding Section In appsettings.json
+            builder.Services.Configure<LegalDocumentSeedingOptions>(builder.Configuration.GetSection("LegalDocumentSeeding"));
+
             // Add Service For Bad Request Erorr Handling =============
             builder.Services.Configure<ApiBehaviorOptions>(options => {
                 options.InvalidModelStateResponseFactory = ApiResponseFactory.CustomValidationErrorResponse;
@@ -180,6 +183,7 @@ namespace LegalAI {
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitilazer>();
                 await dbInitializer.InitilazeAsync();
                 await dbInitializer.InitilazeIdentityAsync();
+                await dbInitializer.SeedLegalDocumentsAsync();
             }
 
             // Configure the HTTP request pipeline.
