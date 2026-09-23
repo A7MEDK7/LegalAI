@@ -229,7 +229,7 @@ namespace Service.Implementations {
                 throw new AiServiceUnavailableException($"AI service returned {(int)response.StatusCode}: {responseBody}");
             }
 
-            return responseBody.Trim('"').Equals("Added To Database Successfully", StringComparison.OrdinalIgnoreCase);
+            return true;
         }
     }
 }

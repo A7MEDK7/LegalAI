@@ -17,9 +17,7 @@ namespace Persistence.Data {
         IFileStorageService _fileStorage,
         IOptions<LegalDocumentSeedingOptions> _seedingOptions
         ) : IDbInitilazer {
-
         private static readonly HashSet<string> AllowedExtensions = new (StringComparer.OrdinalIgnoreCase) { ".pdf", ".txt", ".docx" };
-
         public async Task InitilazeAsync() {
             try {
                 if (_dbContext.Database.GetPendingMigrations().Any()) {
@@ -31,7 +29,6 @@ namespace Persistence.Data {
                 throw;
             }
         }
-
         public async Task InitilazeIdentityAsync() {
 
             // Seed Roles
@@ -102,11 +99,6 @@ namespace Persistence.Data {
                     await _userManager.AddToRoleAsync(systemAdministratorUser, "System Administrator");
             }
         }
-
-        // ═══════════════════════════════════════════════════════════
-        // SEED LEGAL DOCUMENTS FROM THE PENDING FOLDER
-        // ═══════════════════════════════════════════════════════════
-
         public async Task SeedLegalDocumentsAsync() {
 
             var pendingPath = _seedingOptions.Value.PendingPath;
