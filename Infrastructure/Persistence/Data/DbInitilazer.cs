@@ -112,11 +112,13 @@ namespace Persistence.Data {
             }
 
             // The user this batch of documents will be attributed to
-            var uploader = await _userManager.FindByEmailAsync("Khaled@gmail.com");
+            var mangerUsers = await _userManager.GetUsersInRoleAsync("Legal Manager");
+
+            var uploader = mangerUsers.FirstOrDefault();
 
             if (uploader is null) {
                 _logger.LogWarning(
-                    "Legal document seeding skipped — seeding user (Khaled@gmail.com) was not found. " +
+                    "Legal document seeding skipped — seeding user was not found. " +
                     "Run identity seeding first.");
 
                 return;
@@ -183,7 +185,7 @@ namespace Persistence.Data {
                         FileSize = fileInfo.Length,
                         Source = "Initial Legal Reference Seeding",
                         Category = "Legal Reference",
-                        Status = DocumentStatus.Processing,
+                        Status = DocumentStatus.Indexed,
                         UploadedById = uploader.Id,
                         LegalOpinionId = null
                     };
